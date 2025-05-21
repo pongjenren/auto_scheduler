@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block content %}
+<h3 class="mb-4">可用時間段設定</h3>
+
+<form id="settingsForm" onsubmit="return saveSettings(event)">
+  <div id="slotContainer">
+    {% for slot in settings.work_slots %}
+    <div class="row g-2 mb-2 slot-row">
+      <div class="col-3">
+        <select class="form-select weekday">
+          {% for d in range(7) %}
+          <option value="{{d}}" {{ 'selected' if d==slot.weekday else '' }}>{{ ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][d] }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col">
+        <input type="time" class="form-control start" value="{{ slot.start }}" required />
+      </div>
+      <div class="col">
+        <input type="time" class="form-control end" value="{{ slot.end }}" required />
+      </div>
+      <div class="col-auto">
+        <button class="btn btn-outline-danger" type="button" onclick="removeSlot(this)">✕</button>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <button class="btn btn-outline-secondary mb-3" type="button" onclick="addSlot()">新增時段</button>
+  <br />
+  <button class="btn btn-primary">儲存</button>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  function slotToJson(row) {
+    return {
+      weekday: parseInt(row.querySelector(".weekday").value),
+      start: row.querySelector(".start").value,
+      end: row.querySelector(".end").value,
+    };
+  }
+  function addSlot() {
+    const row = document.querySelector(".slot-row").cloneNode(true);
+    row.querySelectorAll("input").forEach((el) => (el.value = ""));
+    document.getElementById("slotContainer").appendChild(row);
+  }
+  function removeSlot(btn) {
+    btn.closest(".slot-row").remove();
+  }
+  async function saveSettings(e) {
+    e.preventDefault();
+    const rows = document.querySelectorAll(".slot-row");
+    const work_slots = Array.from(rows).map(slotToJson);
+    const res = await fetch("/settings/", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ work_slots }),
+    });
+    if (res.ok) location.reload();
+  }
+</script>
+{% endblock %}

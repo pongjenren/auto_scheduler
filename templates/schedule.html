@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block content %}
+<h3 class="mb-4">未來四天排程</h3>
+<div class="row row-cols-1 row-cols-md-4 g-3">
+  {% for i in range(4) %}
+  {% set date = today + timedelta(days=i) %}
+  <div class="col">
+    <div class="card h-100">
+      <div class="card-header text-center fw-bold">
+        {{ date.strftime("%m/%d (%a)") }}
+      </div>
+      <ul class="list-group list-group-flush">
+        {% for slot in plan[date.isoformat()] %}
+        <li class="list-group-item">
+          <span class="badge bg-primary">{{ slot["start"] }} ~ {{ slot["end"] }}</span>
+          <div>{{ slot["task"]["title"] }}</div>
+        </li>
+        {% endfor %}
+        {% if not plan[date.isoformat()] %}
+        <li class="list-group-item text-center text-muted">— 無排程 —</li>
+        {% endif %}
+      </ul>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

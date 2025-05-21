@@ -1,0 +1,20 @@
+/* FAB Add Task Button */
+#fab-add-task {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  transition: background 0.2s;
+}
+#fab-add-task:hover {
+  background: #0d6efd;
+  color: #fff;
+}
+body {
+  font-family: "Segoe UI", "Noto Sans TC", sans-serif;
+}
+.card-header {
+  background-color: #f8f9fa;
+}
+.list-group-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
