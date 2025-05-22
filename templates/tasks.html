@@ -84,10 +84,6 @@
             <input type="date" class="form-control" name="due_date" />
           </div>
           <div class="mb-3">
-            <label class="form-label">顏色</label>
-            <input type="color" class="form-control form-control-color" name="color" value="#2196f3" />
-          </div>
-          <div class="mb-3">
             <label class="form-label">狀態</label>
             <select class="form-select" name="status">
               <option value="todo">TODO</option>
@@ -96,7 +92,13 @@
           </div>
           <div class="mb-3">
             <label class="form-label">顏色</label>
-            <input type="color" class="form-control form-control-color" name="color" value="#2196f3" />
+            <select class="form-select" name="color" required>
+              {% for color in colors %}
+              <option value="{{ color }}" style="background:{{ color }};" {% if task.color == color %}selected{% endif %}>
+                {{ color }}
+              </option>
+              {% endfor %}
+            </select>
           </div>
         </div>
         <div class="modal-footer">
@@ -158,7 +160,7 @@ document.querySelectorAll('.task-row').forEach(row => {
     form.est_hours.value = task.est_hours;
     form.due_date.value = task.due_date || '';
     form.status.value = task.status;
-    form.color.value = task.color || '#2196f3';
+    form.color.value = task.color || '';
     const modal = new bootstrap.Modal(document.getElementById('editTaskModal'));
     modal.show();
   });

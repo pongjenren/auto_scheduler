@@ -1,64 +1,134 @@
 {% extends "base.html" %}
 {% block content %}
-<h3 class="mb-4">可用時間段設定</h3>
 
-<form id="settingsForm" onsubmit="return saveSettings(event)">
-  <div id="slotContainer">
-    {% for slot in settings.work_slots %}
-    <div class="row g-2 mb-2 slot-row">
-      <div class="col-3">
-        <select class="form-select weekday">
-          {% for d in range(7) %}
-          <option value="{{d}}" {{ 'selected' if d==slot.weekday else '' }}>{{ ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][d] }}</option>
-          {% endfor %}
-        </select>
-      </div>
-      <div class="col">
-        <input type="time" class="form-control start" value="{{ slot.start }}" required />
-      </div>
-      <div class="col">
-        <input type="time" class="form-control end" value="{{ slot.end }}" required />
-      </div>
-      <div class="col-auto">
-        <button class="btn btn-outline-danger" type="button" onclick="removeSlot(this)">✕</button>
-      </div>
+<!-- 在頁面最上方顯示忙碌時段 table，標題右側放置儲存按鈕 -->
+<div class="d-flex justify-content-between align-items-center mb-3" style="max-width: 100%;">
+  <h3 class="mb-0">設定忙碌時段</h3>
+  <button class="btn btn-primary" onclick="saveBusySlots(event)">儲存</button>
+</div>
+<table class="table table-bordered" style="width: 80%; margin: auto; table-layout: fixed;">
+  <thead>
+    <tr>
+      <th style="width: 12.5%;">時間</th>
+      {% for day in ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'] %}
+      <th style="width: 12.5%;">{{ day }}</th>
+      {% endfor %}
+    </tr>
+  </thead>
+  <tbody>
+    {# 08:00 ~ 24:00 #}
+    {% for hour in range(8, 25) %}
+    <tr>
+      <td>{{ "%02d:00"|format(hour) }}</td>
+  
+      {# 7 天欄位 (Mon=0 ... Sun=6) #}
+      {% for d in range(7) %}
+        {# 用 namespace 在內層迴圈中修改旗標 #}
+        {% set ns = namespace(busy = false) %}
+  
+        {# 檢查這格是否被標記為忙碌 #}
+        {% for slot in settings.busy_slot|default([]) %}
+          {% if slot.day == d and slot.hour == hour %}
+            {% set ns.busy = true %}
+          {% endif %}
+        {% endfor %}
+  
+        <td>
+            <div style="display: flex; justify-content: center; align-items: center; height: 100%;">
+            <input
+              type="checkbox"
+              name="busy_slot"
+              data-day="{{ d }}"
+              data-hour="{{ hour }}"
+              {% if ns.busy %}checked{% endif %}
+            />
+            </div>
+        </td>
+      {% endfor %}
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+
+<br>
+<br>
+
+
+<h3>任務顏色列表</h3>
+<form id="colorForm" onsubmit="return saveColors(event)">
+  <div id="color-list">
+    {% for color in colors %}
+    <div class="input-group mb-2">
+      <input type="color" class="form-control form-control-sm" name="colors[]" value="{{ color }}" style="max-width: 150px;" required />
+      <button type="button" class="btn btn-danger btn-sm" onclick="this.parentElement.remove()">刪除</button>
     </div>
     {% endfor %}
   </div>
-
-  <button class="btn btn-outline-secondary mb-3" type="button" onclick="addSlot()">新增時段</button>
-  <br />
-  <button class="btn btn-primary">儲存</button>
+  <button type="button" class="btn btn-secondary btn-sm" onclick="addColor()">新增顏色</button>
+  <button type="submit" class="btn btn-primary btn-sm">儲存</button>
 </form>
+
 {% endblock %}
 
 {% block extra_js %}
 <script>
-  function slotToJson(row) {
-    return {
-      weekday: parseInt(row.querySelector(".weekday").value),
-      start: row.querySelector(".start").value,
-      end: row.querySelector(".end").value,
-    };
-  }
-  function addSlot() {
-    const row = document.querySelector(".slot-row").cloneNode(true);
-    row.querySelectorAll("input").forEach((el) => (el.value = ""));
-    document.getElementById("slotContainer").appendChild(row);
-  }
-  function removeSlot(btn) {
-    btn.closest(".slot-row").remove();
-  }
-  async function saveSettings(e) {
+  async function saveBusySlots(e) {
     e.preventDefault();
-    const rows = document.querySelectorAll(".slot-row");
-    const work_slots = Array.from(rows).map(slotToJson);
+    // 收集每格被勾選的忙碌時段資料
+    const busySlots = [];
+    document.querySelectorAll('input[name="busy_slot"]').forEach(chk => {
+      if(chk.checked){
+        busySlots.push({
+          day: parseInt(chk.getAttribute('data-day')),
+          hour: parseInt(chk.getAttribute('data-hour'))
+        });
+      }
+    });
+    const payload = {
+      work_slots: [], // 移除可用時間設定後，預留欄位設定為空陣列
+      busy_slot: busySlots
+    };
     const res = await fetch("/settings/", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ work_slots }),
+      body: JSON.stringify(payload),
     });
-    if (res.ok) location.reload();
+    if (res.ok) {
+      alert("儲存成功！");
+      location.reload();
+    } else {
+      alert("儲存失敗！");
+    }
+  }
+
+  function addColor() {
+    const div = document.createElement('div');
+    div.className = 'input-group mb-2';
+    div.innerHTML = `
+      <input type="color" class="form-control form-control-sm" name="colors[]" placeholder="#000000" style="max-width: 150px;" required />
+      <button type="button" class="btn btn-danger btn-sm" onclick="this.parentElement.remove()">刪除</button>
+    `;
+    document.getElementById('color-list').appendChild(div);
+  }
+  
+  async function saveColors(e) {
+    e.preventDefault();
+    const inputs = document.querySelectorAll('#color-list input[name="colors[]"]');
+    const colors = Array.from(inputs).map(input => input.value);
+    console.log("Payload colors:", colors);
+    const res = await fetch('/settings/colors', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ colors })
+    });
+    const result = await res.json();
+    if (res.ok) {
+      alert('顏色列表儲存成功！');
+    } else {
+      alert('儲存失敗：' + result.message);
+    }
+    return false;
   }
 </script>
 {% endblock %}
