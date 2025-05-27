@@ -13,12 +13,13 @@ async function createTask(e, isFabModal) {
   const form = e.target;
   const title = form.title.value.trim();
   const est_hours = form.est_hours.value;
+  const est_times = form.est_times ? form.est_times.value : 1;
   const due_date = form.due_date ? form.due_date.value : "";
   const color = form.color ? form.color.value : "#2196f3";
   const res = await fetch("/tasks/", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ title, est_hours, due_date, color }),
+    body: JSON.stringify({ title, est_hours, est_times, due_date, color }),
   });
   if (res.ok) {
     if (isFabModal) {

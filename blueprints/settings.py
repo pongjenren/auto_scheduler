@@ -1,6 +1,7 @@
 import json
 import os
 from flask import Blueprint, render_template, request, jsonify
+import pathlib
 from storage.json_store import load_settings, save_settings
 
 settings_bp = Blueprint("settings", __name__, url_prefix="/settings")
@@ -8,32 +9,42 @@ settings_bp = Blueprint("settings", __name__, url_prefix="/settings")
 
 @settings_bp.route("/", methods=["GET"])
 def settings_view():
-    """顯示工作時段設定頁，並讀取顏色列表。"""
-    settings_data = load_settings()
-    json_path = os.path.join(os.getcwd(), "data", "color.json")
+    """顯示可用時段設定頁，並讀取顏色列表與可用時段。"""
+    # 顏色
+    color_path = os.path.join(os.getcwd(), "data", "color.json")
     colors = []
     try:
-        with open(json_path, "r", encoding="utf-8") as f:
+        with open(color_path, "r", encoding="utf-8") as f:
             colors = json.load(f)
     except Exception as e:
         print("Error loading color.json:", e)
-    return render_template("settings.html", settings=settings_data, colors=colors)
+    # 可用時段
+    available_path = os.path.join(os.getcwd(), "data", "available_slots.json")
+    available_slots = []
+    if os.path.exists(available_path):
+        try:
+            with open(available_path, "r", encoding="utf-8") as f:
+                available_slots = json.load(f)
+        except Exception as e:
+            print("Error loading available_slots.json:", e)
+    return render_template("settings.html", colors=colors, available_slots=available_slots)
 
 
-@settings_bp.route("/", methods=["PUT"])
-def update_settings():
-    """
-    更新工作時段及忙碌時段設定（整筆覆寫）。
-    預期格式:
-    {
-      "work_slots": [ { "weekday": 0, "start": "09:00", "end": "12:00" }, ... ],
-      "busy_slot": [ { "day": 1, "hour": 9 }, ... ]
-    }
-    """
+
+# 新增：儲存可用時段
+@settings_bp.route("/available_slots", methods=["POST"])
+def save_available_slots():
+    """儲存可用時段到 available_slots.json"""
     data = request.get_json()
-    # 假設 data/settings.json 結構中有 "work_slots" 與 "busy_slot"
-    save_settings(data)  # 請確保 save_settings 可處理 "busy_slot"
-    return jsonify({"ok": True})
+    slots = data.get("available_slots", [])
+    available_path = os.path.join(os.getcwd(), "data", "available_slots.json")
+    try:
+        with open(available_path, "w", encoding="utf-8") as f:
+            json.dump(slots, f, ensure_ascii=False, indent=2)
+        return jsonify({"status": "success"}), 200
+    except Exception as e:
+        print("Error saving available_slots.json:", e)
+        return jsonify({"status": "error", "message": str(e)}), 500
 
 
 @settings_bp.route("/colors", methods=["POST"])

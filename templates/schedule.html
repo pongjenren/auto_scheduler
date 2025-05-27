@@ -1,7 +1,10 @@
 {% extends "base.html" %}
 {% block content %}
-<h3 class="mb-4">未來四天排程</h3>
-<div class="row row-cols-1 row-cols-md-4 g-3">
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h3 class="mb-0">未來四天排程</h3>
+  <button class="btn btn-success" id="btn-schedule-now">Scheduling Now</button>
+</div>
+<div id="schedule-content" class="row row-cols-1 row-cols-md-4 g-3">
   {% for i in range(4) %}
   {% set date = today + timedelta(days=i) %}
   <div class="col">
@@ -24,4 +27,23 @@
   </div>
   {% endfor %}
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Scheduling Now 按鈕觸發
+document.getElementById('btn-schedule-now').addEventListener('click', async function() {
+  const btn = this;
+  btn.disabled = true;
+  btn.textContent = 'Scheduling...';
+  const res = await fetch('/schedule/refresh');
+  if (res.ok) {
+    location.reload();
+  } else {
+    alert('Scheduling failed!');
+    btn.disabled = false;
+    btn.textContent = 'Scheduling Now';
+  }
+});
+</script>
 {% endblock %}

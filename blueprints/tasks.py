@@ -2,6 +2,8 @@ import uuid
 from flask import Blueprint, jsonify, request, render_template
 
 from storage.json_store import load_tasks, save_tasks
+import json
+import os
 
 tasks_bp = Blueprint("tasks", __name__, url_prefix="/tasks")
 
@@ -17,7 +19,11 @@ def task_list():
         tasks = [t for t in tasks if t["status"] == status]
     tasks.sort(key=lambda x: x.get(sort_key, ""))
 
-    return render_template("tasks.html", tasks=tasks, sort_key=sort_key, status=status)
+    color_path = os.path.join(os.path.dirname(__file__), "../data/color.json")
+    with open(color_path, "r", encoding="utf-8") as f:
+        colors = json.load(f)
+
+    return render_template("tasks.html", tasks=tasks, sort_key=sort_key, status=status, colors=colors)
 
 
 @tasks_bp.route("/", methods=["POST"])
@@ -28,6 +34,7 @@ def add_task():
         "id": str(uuid.uuid4()),
         "title": data["title"],
         "est_hours": float(data["est_hours"]),
+        "est_times": int(data.get("est_times", 1)),
         "due_date": data.get("due_date", ""),
         "color": data.get("color", "#2196f3"),  # 預設藍色
         "status": "todo",
@@ -44,7 +51,10 @@ def update_task(task_id):
     tasks = load_tasks()
     for t in tasks:
         if t["id"] == task_id:
-            t.update(request.get_json())
+            patch_data = request.get_json()
+            if "est_times" in patch_data:
+                patch_data["est_times"] = int(patch_data["est_times"])
+            t.update(patch_data)
             break
     save_tasks(tasks)
     return jsonify({"ok": True})

@@ -1,10 +1,10 @@
 {% extends "base.html" %}
 {% block content %}
 
-<!-- 在頁面最上方顯示忙碌時段 table，標題右側放置儲存按鈕 -->
+<!-- 可用時段設定 table，標題右側放置儲存按鈕 -->
 <div class="d-flex justify-content-between align-items-center mb-3" style="max-width: 100%;">
-  <h3 class="mb-0">設定忙碌時段</h3>
-  <button class="btn btn-primary" onclick="saveBusySlots(event)">儲存</button>
+  <h3 class="mb-0">選取可用時段</h3>
+  <button class="btn btn-primary" onclick="saveAvailableSlots(event)">儲存</button>
 </div>
 <table class="table table-bordered" style="width: 80%; margin: auto; table-layout: fixed;">
   <thead>
@@ -20,27 +20,21 @@
     {% for hour in range(8, 25) %}
     <tr>
       <td>{{ "%02d:00"|format(hour) }}</td>
-  
-      {# 7 天欄位 (Mon=0 ... Sun=6) #}
       {% for d in range(7) %}
-        {# 用 namespace 在內層迴圈中修改旗標 #}
-        {% set ns = namespace(busy = false) %}
-  
-        {# 檢查這格是否被標記為忙碌 #}
-        {% for slot in settings.busy_slot|default([]) %}
+        {% set ns = namespace(avail = false) %}
+        {% for slot in available_slots %}
           {% if slot.day == d and slot.hour == hour %}
-            {% set ns.busy = true %}
+            {% set ns.avail = true %}
           {% endif %}
         {% endfor %}
-  
         <td>
             <div style="display: flex; justify-content: center; align-items: center; height: 100%;">
             <input
               type="checkbox"
-              name="busy_slot"
+              name="available_slot"
               data-day="{{ d }}"
               data-hour="{{ hour }}"
-              {% if ns.busy %}checked{% endif %}
+              {% if ns.avail %}checked{% endif %}
             />
             </div>
         </td>
@@ -72,27 +66,24 @@
 {% endblock %}
 
 {% block extra_js %}
+
 <script>
-  async function saveBusySlots(e) {
+  async function saveAvailableSlots(e) {
     e.preventDefault();
-    // 收集每格被勾選的忙碌時段資料
-    const busySlots = [];
-    document.querySelectorAll('input[name="busy_slot"]').forEach(chk => {
+    // 收集每格被勾選的可用時段資料
+    const availableSlots = [];
+    document.querySelectorAll('input[name="available_slot"]').forEach(chk => {
       if(chk.checked){
-        busySlots.push({
+        availableSlots.push({
           day: parseInt(chk.getAttribute('data-day')),
           hour: parseInt(chk.getAttribute('data-hour'))
         });
       }
     });
-    const payload = {
-      work_slots: [], // 移除可用時間設定後，預留欄位設定為空陣列
-      busy_slot: busySlots
-    };
-    const res = await fetch("/settings/", {
-      method: "PUT",
+    const res = await fetch("/settings/available_slots", {
+      method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+      body: JSON.stringify({ available_slots: availableSlots }),
     });
     if (res.ok) {
       alert("儲存成功！");

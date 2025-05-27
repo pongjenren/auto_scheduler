@@ -1,18 +1,20 @@
 [
   {
-    "id": "b0e64920-198b-4606-9ba2-9cf2ba2ae29e",
+    "id": "97a193e9-d695-4b25-9ec4-aaa9e8d16fdb",
     "title": "A",
-    "est_hours": "2",
-    "due_date": "2025-05-23",
-    "color": "",
-    "status": "done"
+    "est_hours": 1.0,
+    "est_times": 1,
+    "due_date": "2025-05-29",
+    "color": "#976666",
+    "status": "todo"
   },
   {
-    "id": "95093308-8fa3-4e06-93c1-d18a1562bc77",
+    "id": "133888a3-c159-4dc4-869e-1ce89ba8a482",
     "title": "B",
-    "est_hours": "0.5",
-    "due_date": "2025-05-24",
-    "color": "",
+    "est_hours": 3.0,
+    "est_times": 2,
+    "due_date": "2025-05-30",
+    "color": "#7a848d",
     "status": "todo"
   }
 ]
