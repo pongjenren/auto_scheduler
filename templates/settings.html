@@ -17,7 +17,7 @@
   </thead>
   <tbody>
     {# 08:00 ~ 24:00 #}
-    {% for hour in range(8, 25) %}
+    {% for hour in range(8, 24) %}
     <tr>
       <td>{{ "%02d:00"|format(hour) }}</td>
       {% for d in range(7) %}

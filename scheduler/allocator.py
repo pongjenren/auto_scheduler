@@ -45,6 +45,32 @@ def allocate():
                     "hour": slot["hour"],
                 })
     slots = sorted(slots, key=lambda s: (s["date"], s["hour"]))
+    
+    # 合併連續的slots，並轉換為 {"date":xxx, "start":xxx, "end":xxx} 格式
+    merged_slots = []
+    if(slots):
+        dt = slots[0]["date"]
+        st = slots[0]["hour"]
+        ed = slots[0]["hour"]+1
+        for i in range(1, len(slots)):
+            if slots[i]["date"] == dt and slots[i]["hour"] == ed:
+                # 合併
+                ed += 1
+            else:
+                # 新增前一個合併的 slot
+                merged_slots.append({
+                    "date": dt,
+                    "start": st,
+                    "end": ed,
+                })
+                # 更新當前 slot
+                dt = slots[i]["date"]
+                st = slots[i]["hour"]
+                ed = slots[i]["hour"] + 1
+
+
+    slots = merged_slots
+
     slot_usage = [False] * len(slots)
 
     # 2. Prepare tasks: sort by due date first
@@ -76,8 +102,6 @@ def allocate():
     schedule = []
     assigned_per_day = defaultdict(set)  # date -> set of task_ids
 
-    ### start from here
-
     for subtask in subtasks:
         allocated = False
         for idx, slot in enumerate(slots):
@@ -88,26 +112,30 @@ def allocate():
             if subtask["task_id"] in assigned_per_day[slot_date]:
                 continue
             # Check if slot is long enough
-            slot_start = _to_time(slot["start"])
-            slot_end = _to_time(slot["end"])
-            slot_minutes = (datetime.combine(datetime.today(), slot_end) -
-                            datetime.combine(datetime.today(), slot_start)).seconds // 60
-            if slot_minutes < subtask["duration"]:
+            if int(slot["end"]) - int(slot["start"]) < subtask["duration"]:
                 continue
             # Assign
-            start_dt = datetime.strptime(f"{slot['date']} {slot['start']}", "%Y-%m-%d %H:%M")
-            end_dt = start_dt + timedelta(minutes=subtask["duration"])
             schedule.append({
                 "task_id": subtask["task_id"],
                 "subtask_index": subtask["subtask_index"],
-                "name": subtask["name"],
-                "start": start_dt.strftime("%Y-%m-%d %H:%M"),
-                "end": end_dt.strftime("%Y-%m-%d %H:%M"),
+                "title": subtask["title"],
+                "start": slot["start"],
+                "end": slot["start"] + subtask["duration"],
+                "date": slot["date"],
                 "duration": subtask["duration"],
             })
             slot_usage[idx] = True
             assigned_per_day[slot_date].add(subtask["task_id"])
             allocated = True
+            if slot["end"]-slot["start"] > subtask["duration"]:
+                # If there's remaining time, create a new slot for it
+                new_slot = {
+                    "date": slot["date"],
+                    "start": slot["start"] + subtask["duration"],
+                    "end": slot["end"],
+                }
+                slots[idx] = new_slot
+                slot_usage[idx] = False  # Reset usage for the new slot
             break
         if not allocated:
             # Could not allocate this subtask
@@ -119,10 +147,3 @@ def allocate():
         json.dump(schedule, f, ensure_ascii=False, indent=2)
 
     print("finish allocate")
-
-
-
-
-def _to_time(hhmm):
-    h, m = map(int, hhmm.split(":"))
-    return time(h, m)

@@ -2,31 +2,54 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
   <h3 class="mb-0">未來四天排程</h3>
-  <button class="btn btn-success" id="btn-schedule-now">Scheduling Now</button>
+  <button class="btn btn-success" id="btn-schedule-now">Schedule Now</button>
 </div>
-<div id="schedule-content" class="row row-cols-1 row-cols-md-4 g-3">
-  {% for i in range(4) %}
-  {% set date = today + timedelta(days=i) %}
-  <div class="col">
-    <div class="card h-100">
-      <div class="card-header text-center fw-bold">
-        {{ date.strftime("%m/%d (%a)") }}
-      </div>
-      <ul class="list-group list-group-flush">
-        {% for slot in plan[date.isoformat()] %}
-        <li class="list-group-item">
-          <span class="badge bg-primary">{{ slot["start"] }} ~ {{ slot["end"] }}</span>
-          <div>{{ slot["task"]["title"] }}</div>
-        </li>
-        {% endfor %}
-        {% if not plan[date.isoformat()] %}
-        <li class="list-group-item text-center text-muted">— 無排程 —</li>
-        {% endif %}
-      </ul>
-    </div>
-  </div>
-  {% endfor %}
-</div>
+<style>
+.schedule-table { width: 100%; table-layout: fixed; }
+.schedule-table th, .schedule-table td { text-align: center; vertical-align: middle; border: 1px solid #dee2e6; height: 60px; }
+.schedule-block { color: #fff; border-radius: 6px; font-weight: bold; display: flex; align-items: center; justify-content: center; height: 100%; }
+</style>
+<table class="schedule-table mb-4">
+  <thead>
+    <tr>
+      <th>時間</th>
+      {% for d in date_list %}
+        <th>{{ d.label }}</th>
+      {% endfor %}
+    </tr>
+  </thead>
+  <tbody>
+    {% for hour in range(8, 24) %}
+    <tr>
+      <td>{{ '%02d:00' % hour }}</td>
+      {% for d in date_list %}
+        <td>
+          {% set date = d.date %}
+          {% set found = namespace(val=false) %}
+          {% for item in schedule_data %}
+            {% if item.date == date and item.start <= hour and hour < item.end %}
+              <div class="schedule-block" style="background: {{ task_colors[item.task_id] if item.task_id in task_colors else '#2196f3' }};">
+                {{ item.title }}<br><span style="font-size:0.9em;"></span>
+              </div>
+              {% set found.val = true %}
+
+            {% endif %}
+          {% endfor %}
+            {% if not found.val %}
+            {% if date in unavailable_slots and hour in unavailable_slots[date] %}
+              <div class="schedule-block" style="background: #e0e0e0; color: #888;">  
+              </div>
+            {% else %}
+              <span class="text-muted"></span>
+            {% endif %}
+          {% endif %}
+
+        </td>
+      {% endfor %}
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
 {% endblock %}
 
 {% block extra_js %}
@@ -37,13 +60,13 @@ document.getElementById('btn-schedule-now').addEventListener('click', async func
   btn.disabled = true;
   btn.textContent = 'Scheduling...';
   const res = await fetch('/schedule/refresh');
-  if (res.ok) {
-    location.reload();
-  } else {
-    alert('Scheduling failed!');
-    btn.disabled = false;
-    btn.textContent = 'Scheduling Now';
-  }
+  location.reload();
+  // if (res.ok) {
+  // } else {
+  //   alert('Scheduling failed!');
+  //   btn.disabled = false;
+  //   btn.textContent = 'Schedule Now';
+  // }
 });
 </script>
 {% endblock %}

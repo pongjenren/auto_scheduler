@@ -1,1 +1,29 @@
-[]
+[
+  {
+    "task_id": "43a3f7c4-b6ea-42ee-9a11-cfd2661eb8f7",
+    "subtask_index": 0,
+    "title": "A",
+    "start": 13,
+    "end": 15,
+    "date": "2025-05-30",
+    "duration": 2
+  },
+  {
+    "task_id": "30af53c0-1001-4c30-9c00-eac00811c458",
+    "subtask_index": 0,
+    "title": "B",
+    "start": 13,
+    "end": 17,
+    "date": "2025-05-31",
+    "duration": 4
+  },
+  {
+    "task_id": "30af53c0-1001-4c30-9c00-eac00811c458",
+    "subtask_index": 1,
+    "title": "B",
+    "start": 21,
+    "end": 24,
+    "date": "2025-05-30",
+    "duration": 3
+  }
+]
