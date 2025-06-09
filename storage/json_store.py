@@ -4,13 +4,15 @@ import json, os, pathlib
 BASE_DIR = pathlib.Path(__file__).resolve().parents[1] / "data"
 BASE_DIR.mkdir(exist_ok=True)
 
+
 def _read(path, default):
     if not path.exists():
-        path.write_text(json.dumps(default, ensure_ascii=False, indent=2))
-    return json.loads(path.read_text())
+        path.write_text(json.dumps(default, ensure_ascii=False, indent=2), encoding="utf-8")
+    return json.loads(path.read_text(encoding="utf-8"))
+
 
 def _write(path, obj):
-    path.write_text(json.dumps(obj, ensure_ascii=False, indent=2))
+    path.write_text(json.dumps(obj, ensure_ascii=False, indent=2), encoding="utf-8")
 
 def load_tasks():
     return _read(BASE_DIR / "tasks.json", [])
