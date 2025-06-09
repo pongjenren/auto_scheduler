@@ -1,20 +1,29 @@
 [
   {
     "id": "43a3f7c4-b6ea-42ee-9a11-cfd2661eb8f7",
-    "title": "A",
-    "est_hours": 2.0,
+    "title": "電磁學 hw3-5",
+    "est_hours": "2",
     "est_times": 1,
-    "due_date": "2025-06-02",
-    "color": "#976666",
+    "due_date": "2025-06-09",
+    "color": "#dbd2c9",
     "status": "todo"
   },
   {
     "id": "30af53c0-1001-4c30-9c00-eac00811c458",
-    "title": "B",
-    "est_hours": 7.0,
-    "est_times": 2,
-    "due_date": "2025-06-07",
+    "title": "看論文",
+    "est_hours": "7",
+    "est_times": 5,
+    "due_date": "2025-06-13",
     "color": "#7a848d",
+    "status": "todo"
+  },
+  {
+    "id": "7839a074-7f15-4600-9862-89572a0a86ea",
+    "title": "智慧生活期末報告",
+    "est_hours": "5",
+    "est_times": 3,
+    "due_date": "2025-06-19",
+    "color": "#c09d9b",
     "status": "todo"
   }
 ]
