@@ -1,8 +1,11 @@
-# Todo
-- task新增難度、切分次數attribute
-- 新增event功能
-- 修改schedule成table樣式
-- 實現allocator演算法
-- 在schedule view可以點擊安排好的task, 實現與後方任務swap或安排到後面
+# Auto Scheduler
+這是成功大學資料開放與智慧生活課程113學年度下學期第四組實作的期末專題
 
-start from allocator.py line 79
+## Requirement
+flask
+flask-core
+numpy
+pandas
+
+## How to run
+run **app.py**
